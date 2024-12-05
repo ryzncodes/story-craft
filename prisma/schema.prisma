@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  profile       Profile?
+  savedStories  SavedStory[]
+  followedAuthors FollowedAuthor[]
+  readingHistory ReadingHistory[]
+}
+
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  displayName String?
+  bio         String?
+  avatarUrl   String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavedStory {
+  id        String   @id @default(cuid())
+  userId    String
+  storyId   String
+  savedAt   DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+}
+
+model FollowedAuthor {
+  id          String   @id @default(cuid())
+  userId      String
+  authorId    String
+  followedAt  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, authorId])
+}
+
+model ReadingHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  storyId     String
+  lastReadAt  DateTime @default(now())
+  progress    Float    // Percentage or chapter number
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+}
