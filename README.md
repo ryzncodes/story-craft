@@ -1,6 +1,6 @@
-# Story Craft
+# StoryCraft
 
-Story Craft is an engaging, interactive storytelling platform where readers can explore stories with branching paths and decision-making points, and writers can easily create and share interactive stories using an intuitive editor.
+StoryCraft is an engaging, interactive storytelling platform where readers can explore stories with branching paths and decision-making points, and writers can easily create and share interactive stories using an intuitive editor.
 
 ## Table of Contents
 
