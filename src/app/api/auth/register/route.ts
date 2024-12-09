@@ -1,59 +1,63 @@
-import { hashPassword } from '@/lib/auth/password';
+import { createToken } from '@/lib/auth/jwt';
 import { db } from '@/lib/db';
+import { hash } from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  username: z.string().min(3)
+  email: z.string().email('Invalid email address'),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, username } = registerSchema.parse(body);
+    const input = registerSchema.parse(body);
 
-    // Check if user exists
+    // Check if user already exists
     const existingUser = await db.user.findFirst({
-      where: { OR: [{ email }, { username }] }
+      where: {
+        OR: [
+          { email: input.email },
+          { username: input.username },
+        ],
+      },
     });
 
     if (existingUser) {
       return NextResponse.json(
         { error: 'Email or username already exists' },
-        { status: 409 }
+        { status: 400 }
       );
     }
 
-    // Create new user
-    const hashedPassword = await hashPassword(password);
+    // Hash password
+    const hashedPassword = await hash(input.password, 12);
+
+    // Create user
     const user = await db.user.create({
       data: {
-        email,
-        username,
+        email: input.email,
+        username: input.username,
         passwordHash: hashedPassword,
-        profile: {
-          create: {
-            displayName: username
-          }
-        }
       },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        profile: true
-      }
     });
 
+    // Create token
+    const token = createToken({
+      userId: user.id,
+      email: user.email,
+    });
+
+    // Return user data and token
     return NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
         username: user.username,
-        profile: user.profile
-      }
+      },
+      token,
     }, { status: 201 });
 
   } catch (error) {

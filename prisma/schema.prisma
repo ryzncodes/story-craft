@@ -14,55 +14,39 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  username      String    @unique
-  passwordHash  String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  profile       Profile?
-  savedStories  SavedStory[]
-  followedAuthors FollowedAuthor[]
-  readingHistory ReadingHistory[]
-}
-
-model Profile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  displayName String?
-  bio         String?
-  avatarUrl   String?
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model SavedStory {
   id        String   @id @default(cuid())
-  userId    String
-  storyId   String
-  savedAt   DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, storyId])
+  email     String   @unique
+  username  String   @unique
+  passwordHash String
+  stories   Story[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model FollowedAuthor {
-  id          String   @id @default(cuid())
-  userId      String
-  authorId    String
-  followedAt  DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, authorId])
+model Story {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  tags      String[]
+  chapters  Chapter[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model ReadingHistory {
-  id          String   @id @default(cuid())
-  userId      String
-  storyId     String
-  lastReadAt  DateTime @default(now())
-  progress    Float    // Percentage or chapter number
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Chapter {
+  id       String   @id @default(cuid())
+  order    Int
+  content  String
+  storyId  String
+  story    Story    @relation(fields: [storyId], references: [id])
+  choices  Choice[]
+}
 
-  @@unique([userId, storyId])
+model Choice {
+  id        String   @id @default(cuid())
+  content   String
+  chapterId String
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
 }

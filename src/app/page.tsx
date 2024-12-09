@@ -13,12 +13,20 @@ export default function Home() {
       {user ? (
         <div className="flex flex-col items-center gap-4">
           <p className="text-lg">Welcome, {user.username}!</p>
-          <button
-            onClick={logout}
-            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-          >
-            Log Out
-          </button>
+          <div className="flex gap-4">
+            <Link
+              href="/stories/create"
+              className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Create Story
+            </Link>
+            <button
+              onClick={logout}
+              className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex gap-4">

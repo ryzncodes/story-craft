@@ -1,36 +1,44 @@
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth/jwt';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export async function middleware(request: Request) {
-  // Check for protected routes
-  if (request.nextUrl.pathname.startsWith('/api/protected')) {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
+// Add the paths that need authentication
+const protectedPaths = [
+  '/stories/edit',
+];
+
+export function middleware(request: NextRequest) {
+  // Check if the path is protected
+  const isProtectedPath = protectedPaths.some(path => 
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (isProtectedPath) {
+    // Get the token from the cookies
+    const token = request.cookies.get('token')?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      // Redirect to login if no token exists
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    // Verify the token
     const payload = verifyToken(token);
     if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
+      // Redirect to login if token is invalid
+      return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Add user to request for downstream handlers
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-user-id', payload.userId);
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    // Continue to the protected route
+    return NextResponse.next();
   }
 
+  // Continue to non-protected routes
   return NextResponse.next();
-} 
+}
+
+export const config = {
+  matcher: [
+    '/stories/edit/:path*',
+  ],
+}; 
